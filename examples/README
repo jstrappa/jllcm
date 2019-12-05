@@ -1,0 +1,127 @@
+/*
+ * LLCM: Log-linear models comparison measure
+ * 
+ * This program computes the distance between two log-linear models'
+ * structures according to the measure defined in the paper:
+ * 'Log-linear models independence structure comparison',
+ * see https://arxiv.org/abs/1907.08892 
+ * Copyright (C) 2019  Jan Strappa
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *  
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ */
+
+RUN AS:
+
+java -jar jllcm.jar model1 model2 [number of variables] [method]
+
+where [method] is
+
+- llcm (default)   the efficient method proposed in the paper.
+- bf               optimised brute force approach.
+- slowbf           exhaustive brute force approach.
+- both             llcm and (optimised) brute force.
+
+--------------------------------------------------------------------------------
+This program is an implementation of the method presented in the paper
+'Log-linear models independence structure comparison',
+see https://arxiv.org/abs/1907.08892 
+
+--------------------------------------------------------------------------------
+TEST MODELS:
+
+mini.mn:
+	toy example for testing correctness
+
+mini2.mn:
+	toy example for testing correctness and comparing equivalence to mini.mn
+
+no_parameters.mn:
+	for testing parsing when file contains no parameters, i.e., each line
+        starts with "+v"
+
+no_parameters_leading_space.mn:
+	for testing parsing when file contains no parameters and each line
+        starts with a space: " +v"
+
+--------------------------------------------------------------------------------
+TEST: Comparing mini.mn to mini2.mn
+Run:
+$ java -jar jllcm.jar mini.mn mini2.mn 3
+
+Expected result:
+------------------------------------
+Model 1: examples/mini.mn
+Model 2: examples/mini2.mn
+LLCM: [TP: 4, FN: 0; FP: 5, TN: 15]
+BF:   [TP: 4, FN: 0; FP: 5, TN: 15]
+Number of comparisons: 24
+------------------------------------
+Number of comparisons is 24 because there are (2^3 * 3 choose 2) pairwise 
+contexts in total.
+
+False positives:
+x y  context 
+0 1  +v0_0 +v1_1 +v2_0
+1 2  +v0_0 +v1_1 +v2_0
+1 2  +v0_0 +v1_0 +v2_0
+0 2  +v0_0 +v1_0 +v2_1
+1 2  +v0_0 +v1_0 +v2_1
+--------------------------------------------------------------------------------
+TEST: Equivalent log-linears: same1.mn & same2.mn
+
+Run:
+$ java -jar jllcm.jar same1.mn same2.mn 3
+
+Expected result: same1.mn and same2.mn should be equivalent and produce a matrix 
+with 24 TP (zero everywhere else).
+
+--------------------------------------------------------------------------------
+TEST: Equivalent log-linears: negatives1.mn & negatives2.mn
+
+Run:
+$ java -jar jllcm.jar negatives1.mn negatives2.mn 3 both
+
+Expected result: models should be equivalent and produce a matrix 
+with 24 TN (zero everywhere else). Additionally, optimised Brute Force method
+should produce 6 contexts instead of 8 and perform 18 comparisons instead of 24
+(compared to "slow" Brute Force which generates all contexts).
+
+--------------------------------------------------------------------------------
+TEST: Similar log linears:    same1.mn & same3.mn 
+                           OR same2.mn & same3.mn
+
+Run:
+$ java -jar jllcm.jar same1.mn same3.mn 3
+$ java -jar jllcm.jar same2.mn same3.mn 3
+
+Expected result: same1.mn and same3.mn should produce 16 TP and 8 FN,
+because same3.mn lacks the features with +v0_1 and the 2 other variables, which
+represent 2 interactions (v0,v1) and (v0,v2) * 4 possible assignments of 
+v1 and v2 = 8.
+
+False Negatives:
+x y context
+0 1 +v0_1 +v1_1 +v2_0
+0 2 +v0_1 +v1_1 +v2_0
+0 1 +v0_1 +v1_0 +v2_0
+0 2 +v0_1 +v1_0 +v2_0
+0 1 +v0_1 +v1_1 +v2_1
+0 2 +v0_1 +v1_1 +v2_1
+0 1 +v0_1 +v1_0 +v2_1
+0 2 +v0_1 +v1_0 +v2_1
+
+The same applies to same2.mn and same3.mn
+
+

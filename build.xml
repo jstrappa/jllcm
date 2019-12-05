@@ -1,0 +1,30 @@
+<project name="Log-linear Model Comparison Measure" default="jar">
+
+<property name="lib.dir" value="lib"/>
+
+
+    <!-- Generates an executable jar-file -->
+    <target name="jar">
+        <antcall target="class" />
+        <jar destfile="jllcm.jar" basedir="bin">
+            <manifest>
+                <attribute name="Main-Class" value="measure.Main"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- Compiles the source code to class files -->
+    <target name="class">
+        <mkdir dir="bin" />	
+        <javac debug="true" destdir="bin">
+	<src path="src"/>
+	<!--exclude name="**/test/*"/ -->
+	</javac>
+    </target>
+
+    <!-- Removes the class files and jar-file -->
+    <target name="clean">
+        <delete file="jllcm.jar" />
+    </target>
+
+</project>
